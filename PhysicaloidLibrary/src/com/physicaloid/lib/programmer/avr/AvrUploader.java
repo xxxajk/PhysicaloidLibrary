@@ -85,7 +85,9 @@ public class AvrUploader {
             return false;
         }
 
-        if (board.uploadProtocol == Boards.UploadProtocols.STK500) {
+        if (board.uploadProtocol == Boards.UploadProtocols.URCLOCK) {
+            mProg = new Urclock();
+        } else if (board.uploadProtocol == Boards.UploadProtocols.STK500) {
             mProg = new Stk500();
         } else if(board.uploadProtocol == Boards.UploadProtocols.STK500V2) {
             mProg = new Stk500V2();
@@ -123,32 +125,40 @@ public class AvrUploader {
         // 書込みスタート  Writing start
         /////////////////////////////////////////////////////////////////
         mProg.setConfig(mAVRConf, mAVRMem);
-        mProg.open();
-        mProg.enable();
-        int initOK = mProg.initialize();
-        if(initOK < 0) {
-            Log.e(TAG,"initialization failed ("+initOK+")");
-            if(callback != null){ callback.onError(UploadErrors.CHIP_INIT); }
-            return false;
-        }
-//        Log.v(TAG,"AVR device initialized and ready to accept instructions");
+        try {
+            if (mProg.open() < 0) {
+                if (callback != null) callback.onError(UploadErrors.CHIP_INIT);
+                return false;
+            }
+            mProg.enable();
+            int initOK = mProg.initialize();
+            if(initOK < 0) {
+                Log.e(TAG,"initialization failed ("+initOK+")");
+                if(callback != null){ callback.onError(UploadErrors.CHIP_INIT); }
+                return false;
+            }
+    //        Log.v(TAG,"AVR device initialized and ready to accept instructions");
 
-        int sigOK = mProg.check_sig_bytes();
-        if( sigOK != 0) {
-            Log.e(TAG,"check signature failed ("+sigOK+")");
-            if(callback != null){ callback.onError(UploadErrors.SIGNATURE); }
-            return false;
-        }
+            int sigOK = mProg.check_sig_bytes();
+            if( sigOK != 0) {
+                Log.e(TAG,"check signature failed ("+sigOK+")");
+                if(callback != null){ callback.onError(UploadErrors.SIGNATURE); }
+                return false;
+            }
 
-        int writeOK = mProg.paged_write();
-        if(writeOK == 0) { return false; } // canceled
-        if(writeOK < 0) {
-            Log.e(TAG,"paged write failed ("+initOK+")");
-            if(callback != null){ callback.onError(UploadErrors.PAGE_WRITE); }
-            return false;
+            int writeOK = mProg.paged_write();
+            if(writeOK == 0) { return false; } // canceled
+            if(writeOK < 0) {
+                Log.e(TAG,"paged write failed ("+initOK+")");
+                if(callback != null){ callback.onError(UploadErrors.PAGE_WRITE); }
+                return false;
+            }
+            return true;
+        } finally {
+            boolean interrupted = Thread.interrupted();
+            try { mProg.disable(); }
+            finally { if (interrupted) Thread.currentThread().interrupt(); }
         }
-        mProg.disable();
-        return true;
     }
 
     /**

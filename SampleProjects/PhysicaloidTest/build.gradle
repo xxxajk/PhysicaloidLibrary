@@ -1,18 +1,19 @@
-apply plugin: 'android'
-
-dependencies {
-    compile project(':PhysicaloidLibrary')
-}
-
+plugins { id 'com.android.application' }
 android {
-    compileSdkVersion 18
-    buildToolsVersion '18.0.1'
-
+    namespace 'com.example.physicaloidtest'
+    compileSdk 35
     defaultConfig {
-        minSdkVersion 12
-        targetSdkVersion 12
+        applicationId 'com.example.physicaloidtest'
+        minSdk 19
+        // Preserve the legacy sample's runtime permission behavior.
+        targetSdk 28
+        versionCode 1
+        versionName '1.0'
     }
-
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -22,3 +23,4 @@ android {
         }
     }
 }
+dependencies { implementation project(':PhysicaloidLibrary') }

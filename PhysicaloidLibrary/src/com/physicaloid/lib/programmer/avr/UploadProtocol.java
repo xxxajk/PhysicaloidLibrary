@@ -44,6 +44,8 @@ public abstract class UploadProtocol {
     public abstract int  initialize();
     public abstract int  check_sig_bytes();
     public abstract int  paged_write();
+    /** Read flash into the configured buffer. Negative = failure, zero = cancelled. */
+    public int paged_read() { return -1; }
     public abstract void disable();
 
     public void setCallback(UploadCallBack callback) {

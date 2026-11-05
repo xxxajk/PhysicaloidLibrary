@@ -253,7 +253,9 @@ public class Stk500 extends UploadProtocol{
         byte[] tmpbuf = new byte[length];
 
         while(true) {
-            retval = mComm.read(tmpbuf,length);
+            if (Thread.currentThread().isInterrupted()) return -1;
+            retval = mComm.read(tmpbuf,length - totalRetval);
+            if (retval < 0 || retval > length - totalRetval) return -1;
 //            retval = mSerial.read(tmpbuf);
             if(retval > 0) {
                 System.arraycopy(tmpbuf, 0, buf, totalRetval, retval);
@@ -268,10 +270,10 @@ public class Stk500 extends UploadProtocol{
             endTime = System.currentTimeMillis();
             if((endTime - startTime) > 250) {
                 Log.e(TAG,"recv timeout.");
-                break;
+                return -1;
             }
         }
-        return retval;
+        return totalRetval;
     }
 
     // リードバッファをカラにする
@@ -696,6 +698,30 @@ public class Stk500 extends UploadProtocol{
         return -1;
     }
 
+    @Override
+    public int paged_read() {
+        int length = mAVRMem.buf.length;
+        // LOAD_ADDRESS carries a 16-bit word address.
+        if (length == 0 || length > mAVRMem.size || length > 131072) return -1;
+        int page = mAVRMem.page_size;
+        if (page <= 0 || page > 256 || (page & 1) != 0) return -1;
+        for (int address = 0; address < length; address += page) {
+            if (Thread.currentThread().isInterrupted()) return 0;
+            int count = Math.min(page, length - address);
+            if (loadaddr(address / 2) < 0) return -1;
+            byte[] request = { STK500Const.Cmnd_STK_READ_PAGE,
+                (byte)(count >> 8), (byte)count, (byte)'F', STK500Const.Sync_CRC_EOP };
+            if (send(request, request.length) != request.length) return -1;
+            byte[] reply = new byte[count + 2];
+            if (recv(reply, reply.length) != reply.length
+                    || reply[0] != STK500Const.Resp_STK_INSYNC
+                    || reply[count + 1] != STK500Const.Resp_STK_OK) return -1;
+            System.arraycopy(reply, 1, mAVRMem.buf, address, count);
+            report_progress((address + count) * 100 / length);
+        }
+        return length;
+    }
+
     public int paged_write() {
         int page_size = mAVRMem.page_size;
         int n_bytes = mAVRMem.buf.length;
@@ -905,7 +931,7 @@ public class Stk500 extends UploadProtocol{
             buf[2] = (byte)((addr >> 8) & 0xff);
             buf[3] = STK500Const.Sync_CRC_EOP;
 
-            send(buf, 4);
+            if (send(buf, 4) != 4) return -1;
 
             if (recv(buf, 1) < 0) { return -1; }
             if (buf[0] == STK500Const.Resp_STK_NOSYNC) {

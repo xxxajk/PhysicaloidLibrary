@@ -18,6 +18,7 @@ package com.physicaloid.lib;
 
 public enum Boards {
     // Arduino Series
+    URBOOT_328P                (0, "ur32",ChipTypes.M328P,     UploadProtocols.URCLOCK, 115200, ComProtocols.UART, "Urboot ATmega328P (native protocol, 115200)"),
     ARDUINO_UNO                 (1, "auno",ChipTypes.M328P,     UploadProtocols.STK500,  115200, ComProtocols.UART, "Arduino Uno"),
     ARDUINO_DUEMILANOVE_328     (1, "duem",ChipTypes.M328P,     UploadProtocols.STK500,   57600, ComProtocols.UART, "Arduino Duemilanove ATmega328"),
     ARDUINO_DUEMILANOVE_168     (1, "diec",ChipTypes.M168,      UploadProtocols.STK500,   19200, ComProtocols.UART, "Arduino Diecimila or Duemilanove ATmega168"),
@@ -100,6 +101,7 @@ public enum Boards {
         // AVR
         public static final int STK500                      = 1;    // Arduino Uno
         public static final int STK500V2                    = 2;    // Arduino Mega
+        public static final int URCLOCK                     = 4;    // Native Urboot ATmega328P
         public static final int AVR109                      = 3;    // TODO: What protocol is AVR109 on avrdude
 
         // mbed

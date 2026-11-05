@@ -41,7 +41,8 @@ public class Uploader {
                         }
                 } else {
                         if(board.uploadProtocol == Boards.UploadProtocols.STK500
-                                || board.uploadProtocol == Boards.UploadProtocols.STK500V2) {
+                                || board.uploadProtocol == Boards.UploadProtocols.STK500V2
+                                || board.uploadProtocol == Boards.UploadProtocols.URCLOCK) {
 
                                 AvrUploader avrUploader = new AvrUploader(comm);
 
