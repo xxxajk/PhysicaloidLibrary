@@ -123,14 +123,11 @@ Interrupt the worker to cancel. Readback serializes with uploads and serial I/O,
 temporarily stops read notifications, and restores the UART configuration and
 notifications in finally. An already open connection remains open.
 
-Readback resets the MCU into its bootloader but sends no flash program or erase
-command. It reads the full configured flash, including any bootloader-visible
-bytes. Lock bits and bootloader implementations may restrict access or return
-masked bytes; success means the protocol returned all bytes, not that protected
-memory was bypassed. No EEPROM/fuse/lock-byte backup is provided. Supported AVR
-configurations are ATmega168, ATmega328P, ATmega1284P and ATmega2560; other historical
-board enums without an AVR configuration are still unsupported. A full-chip backup
-is not automatically safe to upload through a bootloader: exclude its protected area.
+Readback uses the MCU's bootloader and sends only flash read commands to access
+memory. It requests the full configured flash, subject to the bootloader's
+access rules and the MCU's lock bits. Supported AVR configurations are
+ATmega168, ATmega328P, ATmega1284P, ATmega2560, and Caterina ATmega32U4. To upload
+a backup through a bootloader, first extract the application region.
 
 ### ATmega32U4 boards with the Caterina bootloader
 
@@ -143,13 +140,15 @@ picks the bootloader. If the sketch port was already open, close it and open a
 fresh connection after entering bootloader mode. Start the operation while the
 bootloader port is present. The app must arrange entry into bootloader mode,
 including the 1200-baud touch and USB reconnect if it uses that approach.
+Select these profiles from application code. The sample app's board picker
+only lists boards for which it bundles a test image.
 
 Uploads accept application Intel HEX files up to 28 KiB and verify each page
 against the bytes read back from flash. Gaps in the image and the rest of the
 final page are filled with `0xFF`. Pages after the image are left intact.
-Readback requests all 32 KiB of flash,
-subject to the bootloader's read permissions. Use an application-only image
-for upload since the final 4 KiB are reserved for the bootloader.
+Readback requests all 32 KiB of flash, subject to the bootloader's read
+permissions. Use an application-only image for upload since the final 4 KiB
+are reserved for the bootloader.
 
 The [Arduino AVR board profiles](https://github.com/arduino/ArduinoCore-avr/blob/master/boards.txt)
 and [Caterina command handling](https://github.com/arduino/ArduinoCore-avr/blob/master/bootloaders/caterina/Caterina.c)
