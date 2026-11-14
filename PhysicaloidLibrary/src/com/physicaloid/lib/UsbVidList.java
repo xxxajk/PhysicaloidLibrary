@@ -18,6 +18,8 @@ package com.physicaloid.lib;
 
 public enum UsbVidList {
     ARDUINO                         (0x2341),
+    ARDUINO_ORG                     (0x2A03),
+    SPARKFUN                        (0x1B4F),
     DCCDUINO                        (0x1A86),
     FTDI                            (0x0403),
     MBED_LPC1768                    (0x0d28),

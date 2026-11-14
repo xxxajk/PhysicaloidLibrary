@@ -28,6 +28,10 @@ import com.physicaloid.lib.usb.driver.uart.UartConfig;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import com.physicaloid.lib.programmer.avr.AvrDownloader;
+import com.physicaloid.lib.programmer.avr.IntelHexWriter;
 
 public class Physicaloid {
 
@@ -495,6 +499,66 @@ public class Physicaloid {
                 });
 
                 mUploadThread.start();
+        }
+
+        /** Progress is delivered synchronously on the calling thread. */
+        public interface ReadbackListener {
+                void onReading(int percent);
+        }
+
+        /**
+         * Reads the full flash of an already open device. Call from a worker thread;
+         * interrupt that thread to cancel. No erase/program commands are sent.
+         * The existing UART configuration is restored on success or failure.
+         */
+        public byte[] readFlash(Boards board) throws IOException {
+                return readFlash(board, null);
+        }
+
+        public byte[] readFlash(Boards board, final ReadbackListener progress) throws IOException {
+                if (board == null) throw new IllegalArgumentException("board is null");
+                synchronized (LOCK) {
+                        synchronized (LOCK_WRITE) {
+                                synchronized (LOCK_READ) {
+                                        if (mSerial == null || !mSerial.isOpened())
+                                                throw new IOException("Call open() before readFlash()");
+                                        UartConfig original = mSerial.getUartConfig();
+                                        UartConfig saved = new UartConfig(original.baudrate, original.dataBits,
+                                                original.stopBits, original.parity, original.dtrOn, original.rtsOn);
+                                        mSerial.stopReadListener();
+                                        try {
+                                                mSerial.clearBuffer();
+                                                if (!mSerial.setUartConfig(new UartConfig(board.uploadBaudrate,
+                                                        UartConfig.DATA_BITS8, UartConfig.STOP_BITS1,
+                                                        UartConfig.PARITY_NONE, false, false)))
+                                                        throw new IOException("Cannot configure UART for readback");
+                                                return new AvrDownloader(mSerial).readFlash(board, new UploadCallBack() {
+                                                        public void onPreUpload() { }
+                                                        public void onUploading(int value) {
+                                                                if (progress != null) progress.onReading(value);
+                                                        }
+                                                        public void onPostUpload(boolean success) { }
+                                                        public void onCancel() { }
+                                                        public void onError(UploadErrors error) { }
+                                                });
+                                        } finally {
+                                                try {
+                                                        if (!mSerial.setUartConfig(saved))
+                                                                throw new IOException("Cannot restore UART after readback");
+                                                } finally {
+                                                        mSerial.clearBuffer();
+                                                        mSerial.startReadListener();
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
+
+        /** Writes Intel HEX only after a complete read. The caller owns the output stream. */
+        public void download(Boards board, OutputStream output, ReadbackListener progress) throws IOException {
+                if (output == null) throw new IllegalArgumentException("output is null");
+                IntelHexWriter.write(readFlash(board, progress), output);
         }
 
         public void cancelUpload() {

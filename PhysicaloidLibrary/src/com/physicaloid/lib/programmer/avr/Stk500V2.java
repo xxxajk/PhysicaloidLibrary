@@ -407,6 +407,7 @@ public class Stk500V2 extends UploadProtocol {
                 long tstart = java.lang.System.currentTimeMillis();
 
                 while((state != sDONE)) {
+                        if (Thread.currentThread().isInterrupted()) return -1;
                         if(read(c, 1) <= 0) {
                                 long tnow = java.lang.System.currentTimeMillis();
                                 if((tnow - tstart) / 1000 > timeoutval) { // wuff -
@@ -463,7 +464,7 @@ public class Stk500V2 extends UploadProtocol {
                                         if(DEBUG_SHOW_RECV) {
                                                 Log.d(TAG, "hoping for size LSB\n");
                                         }
-                                        msglen = ((int) c[0]) * 256;
+                                        msglen = (c[0] & 255) * 256;
                                         state = sSIZE2;
                                         break;
 
@@ -471,7 +472,8 @@ public class Stk500V2 extends UploadProtocol {
                                         if(DEBUG_SHOW_RECV) {
                                                 Log.d(TAG, "hoping for size MSB...");
                                         }
-                                        msglen += (int) c[0];
+                                        msglen += c[0] & 255;
+                                        if (msglen == 0 || msglen > length) return -2;
                                         if(DEBUG_SHOW_RECV) {
                                                 Log.d(TAG, " msg is " + msglen + " bytes");
                                         }
@@ -757,6 +759,34 @@ public class Stk500V2 extends UploadProtocol {
                         }
                 }
                 return 0;
+        }
+
+        @Override
+        public int paged_read() {
+                int length = mAVRMem.buf.length;
+                int page = mAVRMem.page_size;
+                if (length == 0 || length > mAVRMem.size || page <= 0 || page > 256) return -1;
+                byte[] opcode = new byte[4];
+                avr_set_bits(mAVRMem.op[AVRMem.AVR_OP_READ_LO], opcode);
+                for (int address = 0; address < length; address += page) {
+                        if (Thread.currentThread().isInterrupted()) return 0;
+                        int count = Math.min(page, length - address);
+                        // Bit 31 requests extended flash address management.
+                        int wordAddress = (address / 2) | (mAVRMem.size > 65536 ? 0x80000000 : 0);
+                        byte[] load = { CMD_LOAD_ADDRESS, (byte)(wordAddress >>> 24),
+                            (byte)(wordAddress >>> 16), (byte)(wordAddress >>> 8), (byte)wordAddress };
+                        if (send(load, load.length) != load.length + 6) return -1;
+                        byte[] ack = new byte[2];
+                        if (recv(ack, ack.length) != 8 || ack[0] != CMD_LOAD_ADDRESS || ack[1] != STATUS_CMD_OK) return -1;
+                        byte[] request = { CMD_READ_FLASH_ISP, (byte)(count >> 8), (byte)count, opcode[0] };
+                        if (send(request, request.length) != request.length + 6) return -1;
+                        byte[] reply = new byte[count + 3];
+                        if (recv(reply, reply.length) != reply.length + 6 || reply[0] != CMD_READ_FLASH_ISP
+                            || reply[1] != STATUS_CMD_OK || reply[count + 2] != STATUS_CMD_OK) return -1;
+                        System.arraycopy(reply, 2, mAVRMem.buf, address, count);
+                        report_progress((address + count) * 100 / length);
+                }
+                return length;
         }
 
         public int paged_write() {
