@@ -26,16 +26,16 @@ public enum Boards {
     ARDUINO_NANO_168            (0, "na16",ChipTypes.M168,      UploadProtocols.STK500,   57600, ComProtocols.UART, "Arduino Nano ATmega168"),
     ARDUINO_MEGA_2560_ADK       (1, "mg25",ChipTypes.M2560,     UploadProtocols.STK500V2,115200, ComProtocols.UART, "Arduino Mega 2560 or ADK"),
     ARDUINO_MEGA_1280           (0, "mg16",ChipTypes.M1280,     UploadProtocols.STK500,   57600, ComProtocols.UART, "Arduino Mega (ATmega1280)"),
-//    ARDUINO_LEONARD             (0, "leon",ChipTypes.ATMEGA32U4,UploadProtocols.AVR109,   57600, ComProtocols.UART, "Arduino Leonardo"),
-//    ARDUINO_ESPLORA             (0, "espl",ChipTypes.ATMEGA32U4,UploadProtocols.AVR109,   57600, ComProtocols.UART, "Arduino Esplora"),
-//    ARDUINO_MICRO               (0, "micr",ChipTypes.ATMEGA32U4,UploadProtocols.AVR109,   57600, ComProtocols.UART, "Arduino Micro"),
+    ARDUINO_LEONARDO             (0, "leon",ChipTypes.ATMEGA32U4,UploadProtocols.AVR109,   57600, ComProtocols.UART, "Arduino Leonardo"),
+    ARDUINO_ESPLORA             (0, "espl",ChipTypes.ATMEGA32U4,UploadProtocols.AVR109,   57600, ComProtocols.UART, "Arduino Esplora"),
+    ARDUINO_MICRO               (0, "micr",ChipTypes.ATMEGA32U4,UploadProtocols.AVR109,   57600, ComProtocols.UART, "Arduino Micro"),
     ARDUINO_MINI_328            (0, "mn32",ChipTypes.M328P,     UploadProtocols.STK500,   57600, ComProtocols.UART, "Arduino Mini ATmega328"),
     ARDUINO_MINI_168            (0, "mn16",ChipTypes.M168,      UploadProtocols.STK500,   57600, ComProtocols.UART, "Arduino Mini ATmega168"),
     ARDUINO_ETHERNET            (0, "ethe",ChipTypes.M328P,     UploadProtocols.STK500,  115200, ComProtocols.UART, "Arduino Ethernet"),
     ARDUINO_FIO                 (0, "afio",ChipTypes.M328P,     UploadProtocols.STK500,   57600, ComProtocols.UART, "Arduino Fio"),
     ARDUINO_BT_328              (0, "bt32",ChipTypes.M328P,     UploadProtocols.STK500,   19200, ComProtocols.UART, "Arduino BT ATmega328"),
     ARDUINO_BT_168              (0, "bt16",ChipTypes.M168,      UploadProtocols.STK500,   19200, ComProtocols.UART, "Arduino BT ATmega168"),
-//    ARDUINO_LILYPAD_USB         (0, "lpus",ChipTypes.ATMEGA32U4,UploadProtocols.AVR109,   57600, ComProtocols.UART, "LilyPad Arduino USB"),
+    ARDUINO_LILYPAD_USB         (0, "lpus",ChipTypes.ATMEGA32U4,UploadProtocols.AVR109,   57600, ComProtocols.UART, "LilyPad Arduino USB"),
     ARDUINO_LILYPAD_328         (0, "lp32",ChipTypes.M328P,     UploadProtocols.STK500,   57600, ComProtocols.UART, "LilyPad Arduino ATmega328"),
     ARDUINO_LILYPAD_168         (0, "lp16",ChipTypes.M168,      UploadProtocols.STK500,   19200, ComProtocols.UART, "LilyPad Arduino ATmega168"),
     ARDUINO_PRO_5V_328          (1, "pm53",ChipTypes.M328P,     UploadProtocols.STK500,   57600, ComProtocols.UART, "Arduino Pro or Pro Mini (5V, 16MHz) ATmega328"),
@@ -102,7 +102,7 @@ public enum Boards {
         public static final int STK500                      = 1;    // Arduino Uno
         public static final int STK500V2                    = 2;    // Arduino Mega
         public static final int URCLOCK                     = 4;    // Native Urboot ATmega328P
-        public static final int AVR109                      = 3;    // TODO: What protocol is AVR109 on avrdude
+        public static final int AVR109                      = 3;    // Caterina (ATmega32U4)
 
         // mbed
         public static final int USBMEM                      = 31;    // mbed

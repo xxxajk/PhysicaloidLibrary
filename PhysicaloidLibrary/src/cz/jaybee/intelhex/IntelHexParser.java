@@ -82,6 +82,9 @@ public class IntelHexParser {
                         }
 
                         int lineLength = record.length();
+                        if (lineLength < 11 || (lineLength & 1) == 0) {
+                                throw new Exception("Invalid record length (" + recordIdx + ")");
+                        }
                         byte[] hexRecord = new byte[lineLength / 2];
 
                         // sum of all bytes modulo 256 (including checksum) should be 0
@@ -98,7 +101,7 @@ public class IntelHexParser {
                         }
 
                         // if the length field does not correspond with line length
-                        result.length = hexRecord[0];
+                        result.length = hexRecord[0] & 0xff;
                         if((result.length + 5) != hexRecord.length) {
                                 throw new Exception("Invalid record length (" + recordIdx + ")");
                         }
@@ -120,7 +123,7 @@ public class IntelHexParser {
 
         private void processRecord(Record record) throws Exception {
                 // build full address
-                long addr = record.address | upperAddress;
+                long addr = upperAddress + record.address;
                 switch(record.type) {
                         case DATA:
                                 if(dataListener != null) {

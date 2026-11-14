@@ -11,6 +11,7 @@ Features
 - WiFi-Serial communication to ESP8266
 - upload firmware to an Arduino
 - read AVR flash back as raw bytes or Intel HEX (STK500v1/v2)
+- program and read ATmega32U4 flash through the Caterina AVR109 bootloader
 - experimental native Urboot ATmega328P readback and verified programming
 - support on Android 4.4 / API 19 or higher (USB connections need USB Host API)
 - **does not require ROOT**
@@ -130,6 +131,30 @@ memory was bypassed. No EEPROM/fuse/lock-byte backup is provided. Supported AVR
 configurations are ATmega168, ATmega328P, ATmega1284P and ATmega2560; other historical
 board enums without an AVR configuration are still unsupported. A full-chip backup
 is not automatically safe to upload through a bootloader: exclude its protected area.
+
+### ATmega32U4 boards with the Caterina bootloader
+
+Choose `Boards.ARDUINO_LEONARDO`, `Boards.ARDUINO_MICRO`,
+`Boards.ARDUINO_ESPLORA`, or `Boards.ARDUINO_LILYPAD_USB` with the existing
+`upload`, `readFlash`, and `download` methods. Put the board into its Caterina
+bootloader before opening it in the app and grant Android USB permission for the
+bootloader port. Keep other serial devices disconnected so automatic detection
+picks the bootloader. If the sketch port was already open, close it and open a
+fresh connection after entering bootloader mode. Start the operation while the
+bootloader port is present. The app must arrange entry into bootloader mode,
+including the 1200-baud touch and USB reconnect if it uses that approach.
+
+Uploads accept application Intel HEX files up to 28 KiB and verify each page
+against the bytes read back from flash. Gaps in the image and the rest of the
+final page are filled with `0xFF`. Pages after the image are left intact.
+Readback requests all 32 KiB of flash,
+subject to the bootloader's read permissions. Use an application-only image
+for upload since the final 4 KiB are reserved for the bootloader.
+
+The [Arduino AVR board profiles](https://github.com/arduino/ArduinoCore-avr/blob/master/boards.txt)
+and [Caterina command handling](https://github.com/arduino/ArduinoCore-avr/blob/master/bootloaders/caterina/Caterina.c)
+define the supported layout and wire protocol. The Java tests simulate the
+bootloader. Physical Android USB acceptance is pending.
 
 ### Experimental Urboot / Urclock
 

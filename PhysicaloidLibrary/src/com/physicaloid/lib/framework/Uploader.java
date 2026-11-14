@@ -42,13 +42,19 @@ public class Uploader {
                 } else {
                         if(board.uploadProtocol == Boards.UploadProtocols.STK500
                                 || board.uploadProtocol == Boards.UploadProtocols.STK500V2
-                                || board.uploadProtocol == Boards.UploadProtocols.URCLOCK) {
+                                || board.uploadProtocol == Boards.UploadProtocols.URCLOCK
+                                || board.uploadProtocol == Boards.UploadProtocols.AVR109) {
 
                                 AvrUploader avrUploader = new AvrUploader(comm);
 
-                                comm.setUartConfig(new UartConfig(board.uploadBaudrate, UartConfig.DATA_BITS8, UartConfig.STOP_BITS1, UartConfig.PARITY_NONE, false, false));
-
-                                ret = avrUploader.run(fileStream, board, callback);
+                                boolean configured = comm.setUartConfig(new UartConfig(board.uploadBaudrate,
+                                        UartConfig.DATA_BITS8, UartConfig.STOP_BITS1,
+                                        UartConfig.PARITY_NONE, false, false));
+                                if (!configured && board.uploadProtocol == Boards.UploadProtocols.AVR109) {
+                                        if (callback != null) callback.onError(UploadErrors.CHIP_INIT);
+                                } else {
+                                        ret = avrUploader.run(fileStream, board, callback);
+                                }
 
                         } else if(board.uploadProtocol == Boards.UploadProtocols.ALTERA_FPGA_RBF) {
                                 ret = new PhysicaloidFpgaConfigurator(comm).configuration(fileStream);

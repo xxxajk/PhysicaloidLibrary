@@ -87,6 +87,8 @@ public class AvrUploader {
 
         if (board.uploadProtocol == Boards.UploadProtocols.URCLOCK) {
             mProg = new Urclock();
+        } else if (board.uploadProtocol == Boards.UploadProtocols.AVR109) {
+            mProg = new Avr109();
         } else if (board.uploadProtocol == Boards.UploadProtocols.STK500) {
             mProg = new Stk500();
         } else if(board.uploadProtocol == Boards.UploadProtocols.STK500V2) {
@@ -113,7 +115,11 @@ public class AvrUploader {
         // ファイル読み込み File read
         /////////////////////////////////////////////////////////////////
         try {
-            getFileToBuf(hexFile);
+            if (board.uploadProtocol == Boards.UploadProtocols.AVR109) {
+                mAVRMem.buf = IntelHexFileToBuf.readApplication(hexFile, Avr109.APPLICATION_SIZE);
+            } else {
+                getFileToBuf(hexFile);
+            }
         } catch(Exception e) {
             Log.d(TAG, "********* ERROR ********* " + e.toString());
             mIntelHex = null;

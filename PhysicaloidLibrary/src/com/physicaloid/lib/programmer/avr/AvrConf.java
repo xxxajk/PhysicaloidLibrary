@@ -68,6 +68,8 @@ public class AvrConf {
             setATmega328P();
         } else if(board.chipType == Boards.ChipTypes.M1284P) {
             setATmega1284P();
+        } else if(board.chipType == Boards.ChipTypes.ATMEGA32U4) {
+            setATmega32U4();
         } else if(board.chipType == Boards.ChipTypes.M2560) {
             setATmega2560();
         } else {
@@ -77,6 +79,14 @@ public class AvrConf {
 
     static byte[] createSignature(int sig1, int sig2, int sig3) {
         return new byte[]{(byte)sig1, (byte)sig2, (byte) sig3};
+    }
+
+    private void setATmega32U4() {
+        desc = "ATMEGA32U4";
+        signature = createSignature(0x1e, 0x95, 0x87);
+        // AVR109 uses the bootloader's block commands instead of ISP opcodes.
+        flash = new AVRConfMemFlash(true, 32768, 128, 256, 0, 0, 0xff, 0xff,
+                null, null, null, null, null, null, 0, 0, 128, 128);
     }
 
     private void setATmega2560(){

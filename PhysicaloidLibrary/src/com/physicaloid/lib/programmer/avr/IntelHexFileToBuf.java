@@ -16,12 +16,14 @@
 
 package com.physicaloid.lib.programmer.avr;
 
+import cz.jaybee.intelhex.IntelHexDataListener;
 import cz.jaybee.intelhex.IntelHexParser;
 import cz.jaybee.intelhex.IntelHexParserRun;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 public class IntelHexFileToBuf {
 
@@ -46,6 +48,31 @@ public class IntelHexFileToBuf {
         if(ihpd != null) {
             ihpd.getBufData(buf);
         }
+    }
+
+    /** Build an application image from its actual record addresses, including sparse gaps. */
+    static byte[] readApplication(InputStream input, int limit) throws Exception {
+        final byte[] image = new byte[limit];
+        Arrays.fill(image, (byte) 0xff);
+        final int[] end = {0};
+        try (InputStream stream = input) {
+            IntelHexParser parser = new IntelHexParser(stream);
+            parser.setDataListener(new IntelHexDataListener() {
+                public void data(long address, byte[] bytes) {
+                    if (address < 0 || address + bytes.length > image.length) {
+                        throw new IllegalArgumentException("HEX record outside application flash");
+                    }
+                    if (bytes.length == 0) return;
+                    System.arraycopy(bytes, 0, image, (int) address, bytes.length);
+                    end[0] = Math.max(end[0], (int) address + bytes.length);
+                }
+
+                public void eof() { }
+            });
+            parser.parse();
+        }
+        if (end[0] == 0) throw new IOException("Empty application image");
+        return Arrays.copyOf(image, end[0]);
     }
 
     public void parse(String filePath) throws FileNotFoundException, IOException, Exception {

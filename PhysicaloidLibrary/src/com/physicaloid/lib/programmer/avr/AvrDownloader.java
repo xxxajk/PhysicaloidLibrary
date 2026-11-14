@@ -13,6 +13,7 @@ public class AvrDownloader {
     public AvrDownloader(SerialCommunicator serial) { this.serial = serial; }
 
     protected UploadProtocol protocol(Boards board) throws IOException {
+        if (board.uploadProtocol == Boards.UploadProtocols.AVR109) return new Avr109();
         if (board.uploadProtocol == Boards.UploadProtocols.URCLOCK) return new Urclock();
         if (board.uploadProtocol == Boards.UploadProtocols.STK500) return new Stk500();
         if (board.uploadProtocol == Boards.UploadProtocols.STK500V2) return new Stk500V2();
